@@ -3,9 +3,11 @@ class CuckooHashing:
 		self.size = s
 		self.table1 =[]
 		self.table2 = []
+		self.history = [] 
 		for _ in range(self.size):
 			self.table1.append("empty")
 			self.table2.append("empty")
+
 
 	# HASH FUNCTION 1
 	def hash1(self,key):
@@ -30,16 +32,16 @@ class CuckooHashing:
 
 		# CASE 1: Element is present in table 1
 		if (self.table1[index] == key):
-			print("\n" + str(key) + " is present in Table1[" +str(index)+"]")
+			print("\n\t\t-:\t" + str(key) + " is present in Table1[" +str(index)+"]\t:-")
 			return 1,index
 
 		# CASE 2: Element is present in table 2
 		if (self.table2[index1] == key):
-			print("\n" + str(key) + " is present in Table2[" +str(index1)+"]")
+			print("\n\t\t-:\t" + str(key) + " is present in Table2[" +str(index1)+"]\t:-")
 			return 2,index1
 
 		# CASE 3: Element is not present in either Tables
-		print("\nElement " + str(key) + " is not present in either Tables")
+		print("\n\t\tElement " + str(key) + " is not present in either Tables")
 		return -1,"empty"
 
 	# DELETE ELEMENT IN TABLE
@@ -62,6 +64,7 @@ class CuckooHashing:
 			print("\nElement " + str(key) + " deleted successfully!")
 			return
 
+	# INSERT ELEMENT IN TABLE
 	def insert(self,originalKey,key,table):
 		# Intializing Variables
 		if (table == "table1"):
@@ -73,29 +76,44 @@ class CuckooHashing:
 			index = self.hash2(key)
 			nextTable = "table1"
 
-		if originalKey == key:
-			print("loop Detected")
-
-		# CASE 1: Arg Table is empty then insert
+		
+		# CASE 1: When Slot is empty in table then insert
 		if (insertingTable[index] == "empty"):
 			insertingTable[index] = key
-			print(key,"inserted",originalKey)
 			return
 
 
-		# CASE 2: Arg Table is not empty insert new key and call insert() again on conflictingKey
+		# CASE 2: When slot is not empty, move the confilicting key, store the new key and call 
+		# recursion on conflicting key
 		if (insertingTable[index] != "empty"):
 			conflicitingKey = insertingTable[index]
-			print(key,conflicitingKey,originalKey)
+			if originalKey == -1:
+				originalKey = conflicitingKey
+			elif originalKey == conflicitingKey:
+				print("\n\tLoop Detected hence Resize")
+				newSize = self.size*2
+				self.resize(newSize)
+				return
 			insertingTable[index] = key
-			self.insert(key,conflicitingKey,nextTable)
+			self.insert(originalKey,conflicitingKey,nextTable)
 			return
 
+	# RESIZE ELEMENT IN TABLE
+	def resize(self,newSize):
+		#  Intializing all the Variables
+		self.size = newSize
+		self.table1 = []
+		self.table2 = []
+		for _ in range(self.size):
+			self.table1.append("empty")
+			self.table2.append("empty")
+
+		# Insert all the entries in resized table
+		for key in self.history:
+			self.insert(-1,key,"table1")
 
 
-
-
-
+# MENU FOR CUCKOO HASHING
 def menu():
 	print("\n\t\t======== MENU ========")
 	print("\n\t\tPress 1: To Search key")
@@ -122,7 +140,9 @@ def main():
 				if(key == "q"):
 					break
 				else:
-					instance.insert(-1,int(key),"table1")
+					key = int(key)
+					instance.history.append(key)
+					instance.insert(-1,key,"table1")
 
 		# CASE 3: Delete an Element in tables
 		elif option == "3":

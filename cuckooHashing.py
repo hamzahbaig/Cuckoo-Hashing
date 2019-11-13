@@ -9,11 +9,11 @@ class CuckooHashing:
 
 	# HASH FUNCTION 1
 	def hash1(self,key):
-		return key%11
+		return key%self.size
 
 	# HASH FUCNTION 2
 	def hash2(self,key):
-		return int((key/11)%11)
+		return int((key/self.size)%self.size)
 
 	# PRINT TABLES
 	def printTables(self):
@@ -56,32 +56,44 @@ class CuckooHashing:
 			print("\nElement " + str(key) + " deleted successfully!")
 			return
 
-		# CASE 2: Deleting Element from table 1
+		# CASE 3: Deleting Element from table 3
 		if (tableNo == 2):
 			self.table2[index] = "empty"
 			print("\nElement " + str(key) + " deleted successfully!")
 			return
 
-	# INSERT ELEMENT IN TABLE
-	def insert(self,key):
-		index = self.hash1(key)
-		index1 = self.hash2(key)
+	def insert(self,originalKey,key,table):
+		# Intializing Variables
+		if (table == "table1"):
+			insertingTable = self.table1
+			index = self.hash1(key)
+			nextTable = "table2"
+		elif (table == "table2"):
+			insertingTable = self.table2
+			index = self.hash2(key)
+			nextTable = "table1"
 
-		# CASE 1: if the Table 1 slot is empty
-		if (self.table1[index] == "empty"):
-			self.table1[index] = key
+		if originalKey == key:
+			print("loop Detected")
+
+		# CASE 1: Arg Table is empty then insert
+		if (insertingTable[index] == "empty"):
+			insertingTable[index] = key
+			print(key,"inserted",originalKey)
 			return
 
-		# CASE 2: if the Table 1 slot is not empty but Table 2 slot is empty
-		elif (self.table1[index] != "empty"):
-			# storing confliciting value
-			conflictingElement = self.table1[index]
-			if(self.table2[index1] == "empty"):
-				# moving conflicting value to next table
-				conflictingElementIndex = self.hash2(conflictingElement)
-				self.table2[conflictingElementIndex] = conflictingElement
-				# storing the new value
-				self.table1[index] = key
+
+		# CASE 2: Arg Table is not empty insert new key and call insert() again on conflictingKey
+		if (insertingTable[index] != "empty"):
+			conflicitingKey = insertingTable[index]
+			print(key,conflicitingKey,originalKey)
+			insertingTable[index] = key
+			self.insert(key,conflicitingKey,nextTable)
+			return
+
+
+
+
 
 
 def menu():
@@ -110,7 +122,7 @@ def main():
 				if(key == "q"):
 					break
 				else:
-					instance.insert(int(key))
+					instance.insert(-1,int(key),"table1")
 
 		# CASE 3: Delete an Element in tables
 		elif option == "3":
